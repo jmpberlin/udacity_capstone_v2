@@ -69,7 +69,8 @@ jobs:
           resource-name: deployment/flask-app
 
   testing-cluster:
-    executor: aws-eks/python3
+    docker:
+      - image: 'cimg/python:3.10'
     parameters:
       cluster-name:
         description: |
