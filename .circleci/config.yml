@@ -118,6 +118,10 @@ workflows:
           requires:
               - creating-deployment
           resource-name: deployment/flask-app
+      - testing-cluster:
+          cluster-name: flask-app
+          aws-region: us-east-1
+          requires: [aws-eks/update-container-image]
       - aws-eks/delete-cluster:
           cluster-name: flask-app
           requires: [testing-cluster]
