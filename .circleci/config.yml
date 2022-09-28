@@ -22,30 +22,30 @@ jobs:
           install-kubectl: true
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
-          resource-file-path: tests/nginx-deployment/deployment.yaml
-          resource-name: deployment/nginx-deployment
+          resource-file-path: deployment-config.yml
+          resource-name: deployment/flask-app
 workflows:
   deployment:
     jobs:
-      # - aws-eks/create-cluster:
-      #     cluster-name: flask-app
+      - aws-eks/create-cluster:
+          cluster-name: flask-app
       - create-deployment:
           cluster-name: flask-app
           aws-region: us-east-1
-          # requires:
-          #   - aws-eks/create-cluster
+          requires:
+            - aws-eks/create-cluster
       - aws-eks/update-container-image:
           cluster-name: flask-app
-          container-image-updates: 'nginx=nginx:1.9.1'
+          container-image-updates: 'flask-app=jmpberlin/flask-app'
           post-steps:
             - kubernetes/delete-resource:
-                resource-names: nginx-deployment
+                resource-names: flask-app
                 resource-types: deployment
                 wait: true
           requires:
             - create-deployment
-          resource-name: deployment/nginx-deployment
-      - aws-eks/delete-cluster:
-          cluster-name: flask-app
-          requires:
-            - aws-eks/update-container-image
+          resource-name: deployment/flask-app
+      # - aws-eks/delete-cluster:
+      #     cluster-name: flask-app
+      #     requires:
+      #       - aws-eks/update-container-image
