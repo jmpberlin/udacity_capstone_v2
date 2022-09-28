@@ -1,51 +1,9 @@
-version: 2.1
-
+version: '2.1'
 orbs:
-  aws-eks: circleci/aws-eks@2.2.0
-  kubernetes: circleci/kubernetes@1.3.1
-
-executors:
-  python:
-    docker:
-      - image: circleci/python:3.7.3-stretch
-  aws:
-    docker:
-      - image: amazon/aws-cli
-
+  aws-eks: circleci/aws-eks@<<pipeline.parameters.dev-orb-version>>
+  kubernetes: circleci/kubernetes@1.3
 jobs:
-  linting:
-    executor: python
-    steps:
-      - checkout
-      - run:
-          name: Installing Dependencies
-          command: |
-            sudo apt-get update
-            sudo apt-get install python3-venv
-      - run:
-          name: Linting
-          command:  |
-            make setup
-            . .env/bin/activate
-            make install
-            make lint
-  building:
-    machine: true
-    working_directory: ~/app
-    steps:
-      - checkout
-      - run:
-          name: Building Docker Image
-          command: |
-            docker login -u ${DOCKER_ID} -p ${DOCKER_PWD}
-            docker build --tag flask-app .
-      - run:
-          name: Pushing Docker Image to Docker Hub
-          command:  |
-            docker tag flask-app:latest jmpberlin/flask-app:latest
-            docker push jmpberlin/flask-app:latest
-  
-  creating-deployment:
+  create-deployment:
     docker:
       - image: 'cimg/python:3.10'
     parameters:
@@ -59,70 +17,35 @@ jobs:
         type: string
     steps:
       - checkout
-      - kubernetes/install
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           install-kubectl: true
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
-          resource-file-path: deployment-config.yml
-          resource-name: deployment/flask-app
-
-  testing-cluster:
-    docker:
-      - image: 'cimg/python:3.10'
-    parameters:
-      cluster-name:
-        description: |
-          flask-app
-        type: string
-      aws-region:
-        description:  |
-          us-east-1
-        type: string
-    steps:
-      - kubernetes/install
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
-      - run:
-          name: Getting Data
-          command: |
-            kubectl get svc
-            kubectl get nodes
-            kubectl get deployment
-      - run:
-          name: Check Stack
-          command:  |
-            aws cloudformation describe-stacks --stack-name eksctl-flask-app-cluster
+          resource-file-path: tests/nginx-deployment/deployment.yaml
+          resource-name: deployment/nginx-deployment
 workflows:
-  deploy:
+  deployment:
     jobs:
-      - linting
-      - building:
-          requires: [linting]
       - aws-eks/create-cluster:
           cluster-name: flask-app
-          aws-region: us-east-1
-          requires: [building]
-      - creating-deployment:
+      - create-deployment:
           cluster-name: flask-app
           aws-region: us-east-1
-          requires: [aws-eks/create-cluster]
+          requires:
+            - aws-eks/create-cluster
       - aws-eks/update-container-image:
           cluster-name: flask-app
-          container-image-updates: flask-app=jmpberlin/flask-app
+          container-image-updates: 'nginx=nginx:1.9.1'
           post-steps:
-              - kubernetes/delete-resource:
-                  resource-names: flask-app
-                  resource-types: deployment
-                  wait: true
+            - kubernetes/delete-resource:
+                resource-names: nginx-deployment
+                resource-types: deployment
+                wait: true
           requires:
-              - creating-deployment
-          resource-name: deployment/flask-app
-      - testing-cluster:
-          cluster-name: flask-app
-          aws-region: us-east-1
-          requires: [aws-eks/update-container-image]
+            - create-deployment
+          resource-name: deployment/nginx-deployment
       - aws-eks/delete-cluster:
           cluster-name: flask-app
-          requires: [testing-cluster]
+          requires:
+            - aws-eks/update-container-image
