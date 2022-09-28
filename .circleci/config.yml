@@ -27,13 +27,13 @@ jobs:
 workflows:
   deployment:
     jobs:
-      - aws-eks/create-cluster:
-          cluster-name: flask-app
+      # - aws-eks/create-cluster:
+      #     cluster-name: flask-app
       - create-deployment:
           cluster-name: flask-app
           aws-region: us-east-1
-          requires:
-            - aws-eks/create-cluster
+          # requires:
+          #   - aws-eks/create-cluster
       - aws-eks/update-container-image:
           cluster-name: flask-app
           container-image-updates: 'nginx=nginx:1.9.1'
