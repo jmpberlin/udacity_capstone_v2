@@ -1,4 +1,4 @@
-version: 2.1
+version: 2 
 
 orbs:
   aws-eks: circleci/aws-eks@1.1.0
@@ -95,13 +95,12 @@ jobs:
 workflows:
   deploy:
     jobs:
-      - linting
-      - building:
-          requires: [linting]
+      # - linting
+      # - building:
+      #     requires: [linting]
       - aws-eks/create-cluster:
           cluster-name: flask-app
           aws-region: us-east-1
-          requires: [building]
       - creating-deployment:
           cluster-name: flask-app
           aws-region: us-east-1
