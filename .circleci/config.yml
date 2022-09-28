@@ -115,7 +115,6 @@ workflows:
                   resource-names: flask-app
                   resource-types: deployment
                   wait: true
-          record: true
           requires:
               - creating-deployment
           resource-name: deployment/flask-app
