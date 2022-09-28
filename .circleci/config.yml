@@ -95,12 +95,13 @@ jobs:
 workflows:
   deploy:
     jobs:
-      # - linting
-      # - building:
-      #     requires: [linting]
+      - linting
+      - building:
+          requires: [linting]
       - aws-eks/create-cluster:
           cluster-name: flask-app
           aws-region: us-east-1
+          requires: [building]
       - creating-deployment:
           cluster-name: flask-app
           aws-region: us-east-1
