@@ -1,26 +1,123 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+orbs:
+  aws-eks: circleci/aws-eks@1.1.0
+  kubernetes: circleci/kubernetes@0.12.0
+
+executors:
+  python:
     docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+      - image: circleci/python:3.7.3-stretch
+  aws:
+    docker:
+      - image: amazon/aws-cli
+
+jobs:
+  linting:
+    executor: python
     steps:
       - checkout
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Installing Dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install python3-venv
+      - run:
+          name: Linting
+          command:  |
+            make setup
+            . .env/bin/activate
+            make install
+            make lint
+  building:
+    machine: true
+    working_directory: ~/app
+    steps:
+      - checkout
+      - run:
+          name: Building Docker Image
+          command: |
+            docker login -u ${DOCKER_ID} -p ${DOCKER_PWD}
+            docker build --tag flask-app .
+      - run:
+          name: Pushing Docker Image to Docker Hub
+          command:  |
+            docker tag flask-app:latest jmpberlin/flask-app:latest
+            docker push jmpberlin/flask-app:latest
+  
+  creating-deployment:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          flask-app
+        type: string
+      aws-region:
+        description:  |
+          us-east-1
+        type: string
+    steps:
+      - checkout
+      - kubernetes/install
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          install-kubectl: true
+      - kubernetes/create-or-update-resource:
+          get-rollout-status: true
+          resource-file-path: deployment-config.yml
+          resource-name: deployment/flask-app
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+  testing-cluster:
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          flask-app
+        type: string
+      aws-region:
+        description:  |
+          us-east-1
+        type: string
+    steps:
+      - kubernetes/install
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+      - run:
+          name: Getting Data
+          command: |
+            kubectl get svc
+            kubectl get nodes
+            kubectl get deployment
+      - run:
+          name: Check Stack
+          command:  |
+            aws cloudformation describe-stacks --stack-name eksctl-flask-app-cluster
 workflows:
-  say-hello-workflow:
+  deploy:
     jobs:
-      - say-hello
+      - linting
+      - building:
+          requires: [linting]
+      - aws-eks/create-cluster:
+          cluster-name: flask-app
+          aws-region: us-east-1
+          requires: [building]
+      - creating-deployment:
+          cluster-name: flask-app
+          aws-region: us-east-1
+          requires: [aws-eks/create-cluster]
+      - aws-eks/update-container-image:
+          cluster-name: flask-app
+          container-image-updates: flask-app=jmpberlin/flask-app
+          post-steps:
+              - kubernetes/delete-resource:
+                  resource-names: flask-app
+                  resource-types: deployment
+                  wait: true
+          record: true
+          requires:
+              - creating-deployment
+          resource-name: deployment/flask-app
+      - aws-eks/delete-cluster:
+          cluster-name: flask-app
+          requires: [testing-cluster]
