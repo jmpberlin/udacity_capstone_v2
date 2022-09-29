@@ -65,6 +65,10 @@ jobs:
         description: |
           py-app
         type: string
+      aws-region:
+        description: |
+          us-east-1
+        type: string
     steps:
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
@@ -85,7 +89,7 @@ workflows:
       #     requires: [building]
       - create-deployment:
           cluster-name: py-app
-          aws-region: us-east-1
+          # aws-region: us-east-1
           # requires:
           #   - aws-eks/create-cluster
       - aws-eks/update-container-image:
