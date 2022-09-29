@@ -35,28 +35,6 @@ jobs:
           command: |
             docker tag py-app:latest jmpberlin/py-app:latest
             docker push jmpberlin/py-app:latest
-
-  # create-deployment:
-  #   docker:
-  #     - image: 'cimg/python:3.10'
-  #   parameters:
-  #     cluster-name:
-  #       description: |
-  #         py-app
-  #       type: string
-  #     aws-region:
-  #       description: |
-  #         us-east-1
-  #       type: string
-  #   steps:
-  #     - checkout
-  #     - aws-eks/update-kubeconfig-with-authenticator:
-  #         cluster-name: << parameters.cluster-name >>
-  #         install-kubectl: true
-  #     - kubernetes/create-or-update-resource:
-  #         get-rollout-status: true
-  #         resource-file-path: deployment.yml
-  #         resource-name: deployment/nginx
   create-deployment:
     docker:
       - image: 'cimg/python:3.10'
@@ -77,7 +55,7 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deployment.yml
-          resource-name: deployment/nginx-deployment
+          resource-name: deployment/py-app-deployment
   test-cluster:
     docker:
       - image: 'cimg/python:3.10'
@@ -91,7 +69,6 @@ jobs:
           us-east-1
         type: string
     steps:
-      - kubernetes/install
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
       - run:
@@ -107,28 +84,28 @@ jobs:
 workflows:
   deployment:
     jobs:
-      # - linting
-      # - building:
-      #     requires: [linting]
-      # - aws-eks/create-cluster:
-      #     cluster-name: py-app
-      #     requires: [building]
-      # - create-deployment:
-      #     cluster-name: py-app
-      #     aws-region: us-east-1
-      #     # requires:
-      #     #   - aws-eks/create-cluster
-      # - aws-eks/update-container-image:
-      #     cluster-name: py-app
-      #     container-image-updates: 'py-app=jmpberlin/py-app'
-      #     post-steps:
-      #       - kubernetes/delete-resource:
-      #           resource-names: py-app
-      #           resource-types: deployment
-      #           wait: true
-      #     # requires:
-      #     #   - create-deployment
-      #     resource-name: deployment/py-app-deployment
+      - linting
+      - building:
+          requires: [linting]
+      - aws-eks/create-cluster:
+          cluster-name: py-app
+          requires: [building]
+      - create-deployment:
+          cluster-name: py-app
+          aws-region: us-east-1
+          requires:
+            - aws-eks/create-cluster
+      - aws-eks/update-container-image:
+          cluster-name: py-app
+          container-image-updates: 'py-app=jmpberlin/py-app'
+          post-steps:
+            - kubernetes/delete-resource:
+                resource-names: py-app
+                resource-types: deployment
+                wait: true
+          requires:
+            - create-deployment
+          resource-name: deployment/py-app-deployment
       - test-cluster:
           cluster-name: py-app
           aws-region: us-east-1
