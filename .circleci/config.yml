@@ -81,7 +81,7 @@ jobs:
 workflows:
   deployment:
     jobs:
-      # - linting
+      - linting
       # - building:
       #     requires: [linting]
       # - aws-eks/create-cluster:
@@ -92,17 +92,17 @@ workflows:
       #     aws-region: us-east-1
       #     # requires:
       #     #   - aws-eks/create-cluster
-      - aws-eks/update-container-image:
-          cluster-name: py-app
-          container-image-updates: 'py-app=jmpberlin/py-app'
-          post-steps:
-            - kubernetes/delete-resource:
-                resource-names: py-app
-                resource-types: deployment
-                wait: true
-          # requires:
-          #   - create-deployment
-          resource-name: deployment/py-app-deployment
+      # - aws-eks/update-container-image:
+      #     cluster-name: py-app
+      #     container-image-updates: 'py-app=jmpberlin/py-app'
+      #     post-steps:
+      #       - kubernetes/delete-resource:
+      #           resource-names: py-app
+      #           resource-types: deployment
+      #           wait: true
+      #     # requires:
+      #     #   - create-deployment
+      #     resource-name: deployment/py-app-deployment
       # - aws-eks/delete-cluster:
       #     cluster-name: flask-app
       #     requires:
