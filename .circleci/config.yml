@@ -100,7 +100,6 @@ workflows:
                 resource-names: py-app
                 resource-types: deployment
                 wait: true
-            - record: true
           # requires:
           #   - create-deployment
           resource-name: deployment/py-app-deployment
