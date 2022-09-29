@@ -1,5 +1,7 @@
 version: '2.1'
-
+orbs:
+  aws-eks: circleci/aws-eks@2.2.0
+  kubernetes: circleci/kubernetes@1.3
 jobs:
   linting:
     docker:
@@ -23,6 +25,15 @@ jobs:
   create-deployment:
     docker:
       - image: 'cimg/python:3.10'
+    parameters:
+      cluster-name:
+        description: |
+          py-app
+        type: string
+      aws-region:
+        description: |
+          us-east-1
+        type: string
     steps:
       - checkout
       - run: |
@@ -32,6 +43,11 @@ jobs:
   aws-eks/create-cluster:
     docker:
       - image: 'cimg/python:3.10'
+    parameters:
+      aws-region:
+        description: |
+          us-east-1
+        type: string
     steps:
       - checkout
       - run:
