@@ -89,7 +89,7 @@ workflows:
       #     requires: [building]
       - create-deployment:
           cluster-name: py-app
-          # aws-region: us-east-1
+          aws-region: us-east-1
           # requires:
           #   - aws-eks/create-cluster
       - aws-eks/update-container-image:
