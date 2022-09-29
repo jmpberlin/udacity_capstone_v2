@@ -112,6 +112,6 @@ workflows:
           requires:
             - aws-eks/update-container-image
       # - aws-eks/delete-cluster:
-      #     cluster-name: flask-app
+      #     cluster-name: py-app
       #     requires:
       #       - aws-eks/update-container-image
