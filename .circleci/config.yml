@@ -94,15 +94,16 @@ workflows:
       #     #   - aws-eks/create-cluster
       - aws-eks/update-container-image:
           cluster-name: py-app
-          container-image-updates: 'py-app-deployment=jmpberlin/py-app'
+          container-image-updates: 'py-app=jmpberlin/py-app'
           post-steps:
             - kubernetes/delete-resource:
-                resource-names: py-app-deployment
+                resource-names: py-app
                 resource-types: deployment
                 wait: true
+            - record: true
           # requires:
           #   - create-deployment
-          resource-name: deployment/py-app
+          resource-name: deployment/py-app-deployment
       # - aws-eks/delete-cluster:
       #     cluster-name: flask-app
       #     requires:
