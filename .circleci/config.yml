@@ -65,6 +65,7 @@ workflows:
           requires: [linting]
       - aws-eks/create-cluster:
           cluster-name: py-app
+          requires: [building]
       - create-deployment:
           cluster-name: py-app
           aws-region: us-east-1
