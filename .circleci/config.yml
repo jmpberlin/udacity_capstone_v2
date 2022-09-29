@@ -95,7 +95,6 @@ workflows:
       - aws-eks/update-container-image:
           cluster-name: py-app
           container-image-updates: 'py-app-deployment=jmpberlin/py-app'
-          resource-names: py-app-deployment
           post-steps:
             - kubernetes/delete-resource:
                 resource-names: py-app-deployment
