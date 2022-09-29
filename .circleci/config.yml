@@ -87,11 +87,11 @@ workflows:
       # - aws-eks/create-cluster:
       #     cluster-name: py-app
       #     requires: [building]
-      - create-deployment:
-          cluster-name: py-app
-          aws-region: us-east-1
-          # requires:
-          #   - aws-eks/create-cluster
+      # - create-deployment:
+      #     cluster-name: py-app
+      #     aws-region: us-east-1
+      #     # requires:
+      #     #   - aws-eks/create-cluster
       - aws-eks/update-container-image:
           cluster-name: py-app
           container-image-updates: 'py-app=jmpberlin/py-app'
@@ -100,8 +100,8 @@ workflows:
                 resource-names: py-app
                 resource-types: deployment
                 wait: true
-          requires:
-            - create-deployment
+          # requires:
+          #   - create-deployment
           resource-name: deployment/py-app
       # - aws-eks/delete-cluster:
       #     cluster-name: flask-app
