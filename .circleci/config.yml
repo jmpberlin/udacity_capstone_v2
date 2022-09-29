@@ -36,6 +36,27 @@ jobs:
             docker tag py-app:latest jmpberlin/py-app:latest
             docker push jmpberlin/py-app:latest
 
+  # create-deployment:
+  #   docker:
+  #     - image: 'cimg/python:3.10'
+  #   parameters:
+  #     cluster-name:
+  #       description: |
+  #         py-app
+  #       type: string
+  #     aws-region:
+  #       description: |
+  #         us-east-1
+  #       type: string
+  #   steps:
+  #     - checkout
+  #     - aws-eks/update-kubeconfig-with-authenticator:
+  #         cluster-name: << parameters.cluster-name >>
+  #         install-kubectl: true
+  #     - kubernetes/create-or-update-resource:
+  #         get-rollout-status: true
+  #         resource-file-path: deployment.yml
+  #         resource-name: deployment/nginx
   create-deployment:
     docker:
       - image: 'cimg/python:3.10'
@@ -43,10 +64,6 @@ jobs:
       cluster-name:
         description: |
           py-app
-        type: string
-      aws-region:
-        description: |
-          us-east-1
         type: string
     steps:
       - checkout
@@ -56,7 +73,7 @@ jobs:
       - kubernetes/create-or-update-resource:
           get-rollout-status: true
           resource-file-path: deployment.yml
-          resource-name: deployment/nginx
+          resource-name: deployment/nginx-deployment
 workflows:
   deployment:
     jobs:
