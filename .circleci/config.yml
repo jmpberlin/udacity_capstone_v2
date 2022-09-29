@@ -109,7 +109,8 @@ workflows:
       - test-cluster:
           cluster-name: py-app
           aws-region: us-east-1
-
+          requires:
+            - aws-eks/update-container-image
       # - aws-eks/delete-cluster:
       #     cluster-name: flask-app
       #     requires:
