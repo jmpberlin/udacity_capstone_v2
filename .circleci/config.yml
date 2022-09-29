@@ -97,7 +97,7 @@ workflows:
           container-image-updates: 'py-app=jmpberlin/py-app'
           post-steps:
             - kubernetes/delete-resource:
-                resource-names: py-app
+                resource-names: py-app-deployment
                 resource-types: deployment
                 wait: true
           # requires:
