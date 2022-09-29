@@ -60,17 +60,17 @@ jobs:
 workflows:
   deployment:
     jobs:
-      - linting
-      - building:
-          requires: [linting]
-      - aws-eks/create-cluster:
-          cluster-name: py-app
-          requires: [building]
+      # - linting
+      # - building:
+      #     requires: [linting]
+      # - aws-eks/create-cluster:
+      #     cluster-name: py-app
+      #     requires: [building]
       - create-deployment:
           cluster-name: py-app
           aws-region: us-east-1
-          requires:
-            - aws-eks/create-cluster
+          # requires:
+          #   - aws-eks/create-cluster
       - aws-eks/update-container-image:
           cluster-name: py-app
           container-image-updates: 'py-app=jmpberlin/py-app'
