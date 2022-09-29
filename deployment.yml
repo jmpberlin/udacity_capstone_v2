@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: py-app-deployment
+spec:
+  selector:
+    matchLabels:
+      app: py-app
+  replicas: 3 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: py-app
+    spec:
+      containers:
+        - name: py-app
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80
